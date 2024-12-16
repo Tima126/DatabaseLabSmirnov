@@ -139,28 +139,20 @@ CREATE TABLE PlaybackSequences
 INSERT INTO PlaybackSequences (UserID, Date, Time, FirstTrackID, SecondTrackID)
 VALUES
 -- ѕользователь 1: несколько последовательностей
-(1, '2024-11-01', '10:00:00', 15, 22),
-(1, '2024-11-02', '11:00:00', 7, NULL),
-(1, '2024-11-03', '14:00:00', 3, 5),
+(1, '2024-11-01', '10:00:00', 1, 2),
+(1, '2024-11-02', '11:00:00', 3, NULL),
+(1, '2024-11-03', '14:00:00', 4, 5),
 
 -- ѕользователь 2: данные за текущий и предыдущие мес€цы
-(2, '2024-09-15', '12:30:00', 5, 7),
-(2, '2024-10-10', '09:00:00', 22, 3),
-(2, '2024-11-20', '16:00:00', 14, 2),
+(2, '2024-09-15', '12:30:00', 5, 2),
+(2, '2024-10-10', '09:00:00', 1, NULL),
+(2, '2024-11-20', '16:00:00', 4, NUll),
 
 -- ѕользователь 3: только текущий мес€ц
 (3, '2024-11-01', '08:45:00', 2, NULL),
-(3, '2024-11-15', '18:20:00', 8, 10),
+(3, '2024-11-15', '18:20:00', 3, 1)
 
--- ѕользователь 4: пустые последовательности (нет треков)
-(4, '2024-10-05', '07:30:00', NULL, NULL),
-(4, '2024-11-12', '19:10:00', NULL, NULL),
 
--- ѕользователь 5: длинные последовательности
-(5, '2024-09-01', '13:00:00', 1, 2),
-(5, '2024-10-01', '13:15:00', 3, 4),
-(5, '2024-11-01', '13:30:00', 5, 6),
-(5, '2024-11-02', '13:45:00', 7, 8);
 
 select* from Tracks
 
@@ -210,12 +202,6 @@ VALUES
 
 
 
-INSERT INTO TrackGenres (TrackID, GenreID)
-VALUES 
-    (1, 1),  -- Track 1 - Rock
-    (2, 2),  -- Track 2 - Pop
-    (3, 3);  -- Track 3 - Jazz
-
 
 select * from Users
 
@@ -223,4 +209,20 @@ select * from Users
 
 
 
-	SELECT * FROM PlaybackSequences WHERE Date >= DATEADD(MONTH, -6, GETDATE());
+	SELECT * FROM PlaybackSequences WHERE Date >= DATEADD(MONTH, -3, GETDATE());
+
+
+ SELECT
+        UserID,
+        AVG(CAST(CASE 
+                    WHEN SecondTrackID IS NULL THEN 1
+                    ELSE 2
+                   END AS FLOAT)) AS AvgTrackCountPrevious
+    FROM
+        PlaybackSequences
+    WHERE
+        Date >= DATEADD(MONTH, -3, GETDATE())
+    GROUP BY
+        UserID
+
+

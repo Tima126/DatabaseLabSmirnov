@@ -1,42 +1,38 @@
-CREATE VIEW UsersWithDecreasedTrackCount AS
-
-WITH PreviousThreeMonths AS (
+CREATE VIEW UserTrackCountReduction AS
+WITH PlaybackSequencesWithSequence AS (
     SELECT
         UserID,
-        AVG(CAST(CASE 
-                    WHEN SecondTrackID IS NULL THEN 1
-                    ELSE 2
-                   END AS FLOAT)) AS AvgTrackCountPrevious
+        FirstTrackID,
+        SecondTrackID,
+        Date,
+        (SELECT COUNT(*) 
+         FROM PlaybackSequences AS sub
+         WHERE sub.UserID = main.UserID 
+           AND sub.Date < main.Date 
+           AND sub.SecondTrackID IS NULL) + 1 AS SequenceNumber
     FROM
-        PlaybackSequences
-    WHERE
-        Date >= DATEADD(MONTH, -3, GETDATE())
-    GROUP BY
-        UserID
+        PlaybackSequences AS main
 ),
-CurrentMonth AS (
+SequenceTrackCounts AS (
     SELECT
         UserID,
-        AVG(CAST(CASE 
-                    WHEN SecondTrackID IS NULL THEN 1
-                    ELSE 2
-                   END AS FLOAT)) AS AvgTrackCountCurrent
+        SequenceNumber,
+        COUNT(*) AS TrackCount,
+        MIN(Date) AS SequenceStartDate 
     FROM
-        PlaybackSequences
-    WHERE
-        Date >= DATEADD(MONTH, -1, GETDATE())
+        PlaybackSequencesWithSequence
     GROUP BY
-        UserID
+        UserID,
+        SequenceNumber
 )
 SELECT
     p.UserID,
-    p.AvgTrackCountPrevious,
-    c.AvgTrackCountCurrent
+    AVG(CASE WHEN p.SequenceStartDate >= DATEADD(MONTH, -3, GETDATE()) THEN p.TrackCount END) AS AvgTrackCountPrevious,
+    AVG(CASE WHEN p.SequenceStartDate >= DATEADD(MONTH, -1, GETDATE()) THEN p.TrackCount END) AS AvgTrackCountCurrent
 FROM
-    PreviousThreeMonths p
-JOIN
-    CurrentMonth c ON p.UserID = c.UserID
-WHERE
-    c.AvgTrackCountCurrent < p.AvgTrackCountPrevious / 2;
-
-select* from UsersWithDecreasedTrackCount
+    SequenceTrackCounts p
+GROUP BY
+    p.UserID
+HAVING
+    AVG(CASE WHEN p.SequenceStartDate >= DATEADD(MONTH, -1, GETDATE()) THEN p.TrackCount END) < 
+    AVG(CASE WHEN p.SequenceStartDate >= DATEADD(MONTH, -3, GETDATE()) THEN p.TrackCount END) / 2;
