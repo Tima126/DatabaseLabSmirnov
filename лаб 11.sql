@@ -161,7 +161,10 @@ INSERT INTO Users (Nickname, LastName, FirstName)
 VALUES 
     ('UserA', 'Smith', 'Alice'),
     ('UserB', 'Johnson', 'Bob'),
-    ('UserC', 'Williams', 'Carol');
+    ('UserC', 'Williams', 'Carol')
+	('Userà', 'Smith', 'Alice'),
+    ('Userô', 'Johnson', 'Bob'),
+    ('Userð', 'Williams', 'Carol');
 
 
 
